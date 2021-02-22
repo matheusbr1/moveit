@@ -1,8 +1,13 @@
 import React from 'react'
+import { ExpirienceBar } from './styles/components/ExperienceBar'
+import './styles/global.css'
+
 
 function App() {
   return (
-    <h1>Hello NLW</h1>
+    <div className="container" >
+      <ExpirienceBar />
+    </div>
   )
 }
 
