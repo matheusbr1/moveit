@@ -1,4 +1,4 @@
-import { createContext, useState } from 'react'
+import { createContext, useEffect, useState } from 'react'
 import challenges from '../../challenges.json'
 
 export const ChallengesContext = createContext({} as ChallengesContextData)
@@ -22,6 +22,7 @@ interface ChallengesContextData {
   activeChallenge: Challenge
   resetChallenge(): void
   experienteToNextLevel: number
+  completeChallenge(): void
 }
 
 export function ChallengesProvider({ children } : ChallengesProviderProps) {
@@ -32,6 +33,10 @@ export function ChallengesProvider({ children } : ChallengesProviderProps) {
 
   const experienteToNextLevel = Math.pow((level + 1) * 4, 2)
 
+  useEffect(() => {
+    Notification.requestPermission()
+  },[])
+
   function levelUp() {
     setLevel(level + 1)
   }
@@ -41,10 +46,37 @@ export function ChallengesProvider({ children } : ChallengesProviderProps) {
     const challenge = challenges[randomChallengeIndex]
     
     setActiveChallenge(challenge)
+
+    new Audio('/notification.mp3').play()
+
+    if(Notification.permission == 'granted') {
+      new Notification('Novo desafio 🎉', {
+        body: `Valendo ${challenge.amount} xp`
+      })
+    }
   }
 
   function resetChallenge() {
     setActiveChallenge(null)
+  }
+
+  function completeChallenge() {
+    if(!activeChallenge) {
+      return
+    }
+
+    const { amount } = activeChallenge
+
+    let finalExpericence = currentExperience + amount
+
+    if (finalExpericence >= experienteToNextLevel) {
+      finalExpericence = finalExpericence -  experienteToNextLevel
+      levelUp()
+    }
+
+    setCurrentExperience(finalExpericence)
+    setActiveChallenge(null)
+    setChallengesCompleted(challengesCompleted + 1)
   }
 
   return (
@@ -56,7 +88,8 @@ export function ChallengesProvider({ children } : ChallengesProviderProps) {
       startNewChallenge,
       activeChallenge,
       resetChallenge,
-      experienteToNextLevel
+      experienteToNextLevel,
+      completeChallenge
     }} >
       {children}
     </ChallengesContext.Provider>
